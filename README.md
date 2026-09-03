@@ -18,20 +18,61 @@ functionality lives from now on, instead of a new standalone plugin per feature.
 3. Write the hooks/functions for that feature in that file.
 4. Prefix function names with `lior_` to avoid collisions with WordPress core,
    WooCommerce, or other plugins.
-5. Deploy the updated plugin folder to the server (see below) — no activation
-   step needed for a new module file, it's picked up automatically.
+5. Ship it by cutting a new Release (see "Releasing a new version" below) — no
+   activation step needed for a new module file, it's picked up automatically.
 
 ## Turning a module off without deleting it
 
 Rename the file so it doesn't end in `.php`, e.g.:
 `admin-order-email-link.php` → `admin-order-email-link.php.off`
 
-## Deploying to the site
+## Installing on the site (first time)
 
-This folder is a git repo (`git log` for history). To ship a change to
-lior-jewellery.com: zip this folder and upload via WP Admin → Plugins → Add
-New → Upload Plugin (replacing the previous version), or copy it over
-SFTP into `wp-content/plugins/lior-toolkit/`.
+1. Download the plugin zip: on the GitHub repo, **Code → Download ZIP**, or
+   grab the zip from the latest **Release**.
+2. WP Admin → Plugins → Add New → Upload Plugin → pick the zip → Install →
+   Activate.
+3. The folder must end up named `lior-toolkit` in `wp-content/plugins/`. If a
+   GitHub download unzips as `lior-toolkit-master` or `lior-toolkit-1.1.0`,
+   rename it to `lior-toolkit` before/after upload.
+
+## Updating the site (after install)
+
+Updates come from GitHub **Releases**, shown like any other plugin update:
+
+- Publish a new Release (see below) → within ~12h, or immediately after
+  clicking **Check again** on WP Admin → Dashboard → Updates, the site shows
+  "Lior Jewellery — Site Toolkit … update available".
+- Click **Update now**. Nothing installs itself — it's always a manual click.
+
+This is wired up by the bundled `plugin-update-checker` library in
+`includes/lib/`. The repo it points at is set in `lior-toolkit.php`
+(`Update URI` header + the `buildUpdateChecker` call).
+
+## Releasing a new version
+
+1. Bump the version in **two** places in `lior-toolkit.php`: the
+   `Version:` header and the `LIOR_TOOLKIT_VERSION` constant. Use semver
+   (e.g. `1.2.0`).
+2. Commit and merge to `master`.
+3. Tag and publish a GitHub Release whose tag matches the version, with or
+   without a leading `v`:
+
+   ```sh
+   git tag v1.2.0
+   git push origin master --tags
+   gh release create v1.2.0 --title "v1.2.0" --notes "What changed"
+   ```
+
+   The update checker compares the release tag (minus any `v`) against the
+   installed `Version:` header, so the tag and the header must agree.
+
+## Manual deploy (fallback)
+
+Still possible if GitHub is unreachable: zip this folder (named
+`lior-toolkit`) and upload via WP Admin → Plugins → Add New → Upload Plugin
+(replacing the previous version), or copy it over SFTP into
+`wp-content/plugins/lior-toolkit/`.
 
 ## Current modules
 
