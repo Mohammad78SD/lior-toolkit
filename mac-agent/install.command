@@ -3,10 +3,11 @@
 # Lior Auto-Print - installer for the office Mac.
 #
 # HOW TO USE: double-click this file. (First time, macOS may block it -
-# right-click it -> Open -> Open.) Answer the two questions, pick the printer,
-# done. No admin password needed.
+# right-click it -> Open -> Open.) It offers to install anything missing
+# (Homebrew, jq, Google Chrome), then asks two questions and the printer.
 #
-# Re-running it is safe - it just updates the settings and restarts the agent.
+# The macOS account must be an Administrator (installing Homebrew/Chrome asks
+# for the Mac password). Re-running is safe - it updates settings and restarts.
 
 set -u
 
@@ -28,33 +29,77 @@ say "Lior Auto-Print installer"
 [ -f "$SRC_DIR/print-agent.sh" ] || die "print-agent.sh is not in the same folder as this installer. Keep the whole folder together and try again."
 
 # ---------------------------------------------------------------------------
-# 1. Dependencies
+# 1. Requirements  (Homebrew, jq, Google Chrome)
 # ---------------------------------------------------------------------------
-say "1. Checking what's installed"
+say "1. Requirements"
 
-if command -v jq >/dev/null 2>&1; then
-	ok "jq is installed"
-elif command -v brew >/dev/null 2>&1; then
-	warn "jq missing - installing it with Homebrew..."
-	brew install jq || die "'brew install jq' failed. Fix that and re-run."
-	ok "jq installed"
-else
-	die "jq is missing and Homebrew isn't installed.
-Install Homebrew from https://brew.sh  then run this installer again."
+# Pick up Homebrew if it's installed but not on PATH yet (fresh Terminal).
+if ! command -v brew >/dev/null 2>&1; then
+	for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+		[ -x "$b" ] && eval "$("$b" shellenv)" && break
+	done
 fi
 
-CHROME=""
-for p in \
-	"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-	"$HOME/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-	"/Applications/Chromium.app/Contents/MacOS/Chromium" \
-	"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
-do
-	if [ -x "$p" ]; then CHROME="$p"; break; fi
-done
-[ -n "$CHROME" ] || die "Google Chrome isn't installed.
-Get it from https://www.google.com/chrome/  then run this installer again."
-ok "Browser for making PDFs: $(basename "$CHROME")"
+find_chrome() {
+	CHROME=""
+	for p in \
+		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+		"$HOME/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+		"/Applications/Chromium.app/Contents/MacOS/Chromium" \
+		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+	do
+		if [ -x "$p" ]; then CHROME="$p"; return 0; fi
+	done
+	return 1
+}
+
+need_brew=0; need_jq=0; need_chrome=0
+command -v brew >/dev/null 2>&1 || need_brew=1
+command -v jq   >/dev/null 2>&1 || need_jq=1
+find_chrome || need_chrome=1
+
+if [ $need_jq -eq 0 ]; then ok "jq is installed"; fi
+if [ $need_chrome -eq 0 ]; then ok "Browser for making PDFs: $(basename "$CHROME")"; fi
+
+if [ $need_brew -eq 1 ] || [ $need_jq -eq 1 ] || [ $need_chrome -eq 1 ]; then
+	missing=""
+	[ $need_brew -eq 1 ]   && missing="$missing Homebrew"
+	[ $need_jq -eq 1 ]     && missing="$missing jq"
+	[ $need_chrome -eq 1 ] && missing="$missing 'Google Chrome'"
+	warn "Missing:$missing"
+	printf "  Install the missing items now? Asks for your Mac password, may take a few minutes. [Y/n]: "
+	read -r ans
+	case "${ans:-Y}" in
+		[Nn]*) die "Nothing installed. Install$missing yourself, then run this again." ;;
+	esac
+
+	if [ $need_brew -eq 1 ]; then
+		say "Installing Homebrew (follow its prompts)..."
+		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" \
+			|| die "Homebrew install failed."
+		for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+			[ -x "$b" ] && eval "$("$b" shellenv)" && break
+		done
+		command -v brew >/dev/null 2>&1 || die "Homebrew installed but not found on PATH. Close Terminal, re-open, run this again."
+		ok "Homebrew installed"
+	fi
+
+	if [ $need_jq -eq 1 ]; then
+		say "Installing jq..."
+		brew install jq || die "'brew install jq' failed."
+		ok "jq installed"
+	fi
+
+	if [ $need_chrome -eq 1 ]; then
+		say "Installing Google Chrome..."
+		brew install --cask google-chrome || die "Chrome install failed. Install it from https://www.google.com/chrome/ then run this again."
+		find_chrome || die "Chrome installed but not found. Open it once, then run this again."
+		ok "Chrome installed: $(basename "$CHROME")"
+	fi
+fi
+
+command -v jq >/dev/null 2>&1 || die "jq still missing."
+find_chrome    || die "A browser for PDF rendering is still missing."
 
 # ---------------------------------------------------------------------------
 # 2. Settings

@@ -17,23 +17,27 @@ the server and all print when it comes back.
 
 ## Easy install (hand this to the client)
 
-1. Make sure the Mac has:
-   - **Google Chrome** — https://www.google.com/chrome/
-   - **Homebrew** — https://brew.sh (only needed if `jq` isn't already there;
-     the installer installs `jq` itself if Homebrew is present)
-   - the **printer added** in System Settings → Printers & Scanners (print a
-     macOS test page first)
-2. Copy this whole `mac-agent` folder to the Mac (e.g. the Desktop).
-3. Get the **API key** from the website: WordPress Admin → Tools → Lior
-   Auto-Print.
-4. Double-click **`install.command`**.
+The installer handles the requirements itself — it offers to install
+**Homebrew**, **jq** and **Google Chrome** if they're missing. The only manual
+prerequisite is the **printer**.
+
+1. The macOS account must be an **Administrator** (installing Homebrew/Chrome
+   asks for the Mac password).
+2. Add the **printer** in System Settings → Printers & Scanners and print a
+   macOS test page.
+3. Copy this whole `mac-agent` folder to the Mac (e.g. the Desktop).
+4. Get the **API key**: WordPress Admin → Tools → Lior Auto-Print.
+5. Double-click **`install.command`**.
    - First time, macOS blocks files from the internet: **right-click
      `install.command` → Open → Open**.
-5. Answer the prompts:
-   - Website address (press Return for `https://lior-jewellery.com`)
+6. Answer the prompts:
+   - Install missing requirements? → Return (yes). Follow Homebrew's own
+     prompts if it runs; this part can take a few minutes and may trigger the
+     Xcode Command Line Tools install dialog — let it finish.
+   - Website address (Return for `https://lior-jewellery.com`)
    - Paste the API key
    - Pick the printer from the numbered list (or `0` for the system default)
-6. It tests the connection, installs itself, starts the background agent, and
+7. It tests the connection, installs itself, starts the background agent, and
    does one test run. Done.
 
 Re-run `install.command` any time to change the settings. Double-click
@@ -77,6 +81,9 @@ launchctl kickstart -k gui/$(id -u)/com.lior.printagent
 | Symptom | Likely cause / fix |
 |---|---|
 | `install.command` won't open | Right-click it → Open → Open (Gatekeeper, first run only). |
+| Installer: "Homebrew install failed" | Account isn't an Administrator, or no internet. Use an admin account. |
+| Homebrew installed but "not found on PATH" | Quit Terminal, re-open, run `install.command` again. |
+| Installer: "Chrome install failed" | Install Chrome from https://www.google.com/chrome/ by hand, then re-run. |
 | Installer: "rejected the key (HTTP 403)" | Re-copy the key from WP Admin → Tools → Lior Auto-Print. |
 | Installer: "endpoint wasn't found (HTTP 404)" | On the site: Settings → Permalinks → Save Changes. Then re-run. |
 | Installer: "Couldn't reach ..." | Mac offline, or wrong website address. |
