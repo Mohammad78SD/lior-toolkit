@@ -38,3 +38,9 @@ SFTP into `wp-content/plugins/lior-toolkit/`.
 - `admin-order-email-link.php` — adds a "view/edit this order" admin-panel
   link to the admin-facing WooCommerce emails (New order, Cancelled order,
   Failed order).
+- `auto-print-orders.php` — auto-prints each new paid order (status →
+  processing) on the office Mac. The module exposes a small key-authed REST
+  queue; a polling agent on the Mac (`mac-agent/`, not loaded by WordPress)
+  fetches queued orders, renders each to an A4 PDF and sends it to the
+  printer, then marks it printed. Config + API key: WP Admin → Tools → Lior
+  Auto-Print. Mac setup: `mac-agent/README.md`.

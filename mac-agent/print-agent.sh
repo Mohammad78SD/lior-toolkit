@@ -1,0 +1,113 @@
+#!/bin/bash
+#
+# Lior auto-print agent
+#
+# Polls lior-jewellery.com for orders queued to print, renders each to an A4
+# PDF with headless Chrome, sends it to the office printer, then tells the site
+# the order is printed. Meant to run every ~20s from com.lior.printagent.plist
+# (launchd). Nothing listens for inbound connections; all traffic is outbound.
+#
+# Requires: jq  (brew install jq)  and Google Chrome.
+
+set -u
+
+# ---------------------------------------------------------------------------
+# CONFIG - edit these three, then (re)load the launchd job.
+# ---------------------------------------------------------------------------
+SITE_URL="https://lior-jewellery.com"
+PRINT_KEY="PASTE_KEY_FROM__WP_Admin__Tools__Lior_Auto-Print"
+PRINTER_QUEUE=""   # blank = the Mac's default printer. Otherwise a name from: lpstat -p
+# ---------------------------------------------------------------------------
+
+CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+API="${SITE_URL%/}/wp-json/lior/v1"
+LOG="$HOME/Library/Logs/lior-print-agent.log"
+SEEN="$HOME/.lior-printed-ids"
+LOCK_DIR="/tmp/lior-print-agent.lock"
+
+log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >>"$LOG"; }
+
+# --- single instance (macOS has no flock; mkdir is atomic) ------------------
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+	# Clear a stale lock left by a killed run (older than 5 minutes).
+	if [ -n "$(find "$LOCK_DIR" -maxdepth 0 -mmin +5 2>/dev/null)" ]; then
+		rmdir "$LOCK_DIR" 2>/dev/null || true
+		mkdir "$LOCK_DIR" 2>/dev/null || exit 0
+	else
+		exit 0
+	fi
+fi
+trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT INT TERM
+
+# --- preflight ------------------------------------------------------------
+if ! command -v jq >/dev/null 2>&1; then
+	log "ERROR: jq not installed. Run: brew install jq"
+	exit 1
+fi
+if [ ! -x "$CHROME" ]; then
+	log "ERROR: Google Chrome not found at $CHROME"
+	exit 1
+fi
+touch "$SEEN"
+
+# --- fetch the queue ----------------------------------------------------------
+resp="$(curl -fsS --max-time 30 -H "X-Lior-Key: $PRINT_KEY" "$API/print-queue" 2>>"$LOG")" || {
+	log "ERROR: could not fetch print queue (network down, or wrong URL/key)"
+	exit 1
+}
+
+count="$(printf '%s' "$resp" | jq 'length' 2>/dev/null || echo 0)"
+case "$count" in
+	''|*[!0-9]*) log "ERROR: unexpected response from site: $resp"; exit 1 ;;
+esac
+[ "$count" -gt 0 ] || exit 0
+log "queue: $count order(s)"
+
+# --- print each order -------------------------------------------------------
+printf '%s' "$resp" | jq -c '.[]' | while IFS= read -r row; do
+	id="$(printf '%s' "$row" | jq -r '.id')"
+	number="$(printf '%s' "$row" | jq -r '.number')"
+
+	# Already printed on this Mac but the site never got the callback? Just retry
+	# the callback, don't print a second copy.
+	if grep -qx "$id" "$SEEN"; then
+		log "order $id already printed locally; re-sending 'done'"
+		curl -fsS --max-time 20 -X POST -H "X-Lior-Key: $PRINT_KEY" "$API/print-queue/$id/done" >/dev/null 2>>"$LOG" || true
+		continue
+	fi
+
+	html="/tmp/lior-order-$id.html"
+	pdf="/tmp/lior-order-$id.pdf"
+	printf '%s' "$row" | jq -r '.receipt_html' >"$html"
+
+	if ! "$CHROME" --headless --disable-gpu --no-pdf-header-footer \
+		--print-to-pdf="$pdf" "file://$html" >>"$LOG" 2>&1; then
+		log "order $id: PDF render failed"
+		curl -fsS --max-time 20 -X POST -H "X-Lior-Key: $PRINT_KEY" \
+			--data-urlencode "error=pdf render failed" "$API/print-queue/$id/failed" >/dev/null 2>>"$LOG" || true
+		rm -f "$html" "$pdf"
+		continue
+	fi
+
+	if [ -n "$PRINTER_QUEUE" ]; then
+		lp_out="$(lp -d "$PRINTER_QUEUE" "$pdf" 2>&1)"
+	else
+		lp_out="$(lp "$pdf" 2>&1)"
+	fi
+	lp_rc=$?
+
+	if [ "$lp_rc" -eq 0 ]; then
+		echo "$id" >>"$SEEN"
+		log "order $number (id $id): sent to printer [$lp_out]"
+		curl -fsS --max-time 20 -X POST -H "X-Lior-Key: $PRINT_KEY" "$API/print-queue/$id/done" >/dev/null 2>>"$LOG" \
+			|| log "order $id: printed, but 'done' callback failed (self-heals next run)"
+	else
+		log "order $id: lp failed rc=$lp_rc [$lp_out]"
+		curl -fsS --max-time 20 -X POST -H "X-Lior-Key: $PRINT_KEY" \
+			--data-urlencode "error=lp rc=$lp_rc: $lp_out" "$API/print-queue/$id/failed" >/dev/null 2>>"$LOG" || true
+	fi
+
+	rm -f "$html" "$pdf"
+done
+
+exit 0
