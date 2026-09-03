@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Lior Jewellery — Site Toolkit
  * Description: Custom functionality for lior-jewellery.com, kept as separate self-contained modules under includes/modules/ so new features can be dropped in later without touching what already works.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Michael
  * Text Domain: lior-toolkit
  * Update URI: https://github.com/Mohammad78SD/lior-toolkit
@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 
 define( 'LIOR_TOOLKIT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LIOR_TOOLKIT_URL', plugin_dir_url( __FILE__ ) );
-define( 'LIOR_TOOLKIT_VERSION', '1.1.0' );
+define( 'LIOR_TOOLKIT_VERSION', '1.2.0' );
 
 /**
  * Self-update from GitHub Releases.

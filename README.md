@@ -84,4 +84,5 @@ Still possible if GitHub is unreachable: zip this folder (named
   queue; a polling agent on the Mac (`mac-agent/`, not loaded by WordPress)
   fetches queued orders, renders each to an A4 PDF and sends it to the
   printer, then marks it printed. Config + API key: WP Admin → Tools → Lior
-  Auto-Print. Mac setup: `mac-agent/README.md`.
+  Auto-Print. Mac setup: hand the client `mac-agent/` and have them
+  double-click `install.command` (see `mac-agent/README.md`).
