@@ -4,42 +4,36 @@
  *
  * Woodmart's "Banner" widget (used for the homepage Necklaces/Pendants/Rings
  * category tiles) renders self-hosted videos as plain
- * <video src="..." autoplay muted loop playsinline> with no preload control
- * and no filter hook to intercept — the browser's preload scanner starts
- * fetching them the instant it parses the HTML, regardless of whether the
- * tile is anywhere near the viewport. On a real page load these end up
- * competing at low priority against 100+ other requests and can take
- * 15+ seconds to finish, dragging out DOMContentLoaded/Load and confusing
- * LCP attribution for whatever paints after them.
+ * <video src="..." autoplay muted loop playsinline> with no preload control.
+ * The browser's preload scanner fetches them the instant it parses the
+ * HTML, regardless of whether the tile is anywhere near the viewport. Under
+ * real page-load contention (100+ requests) they can take 15+ seconds to
+ * finish, dragging out DOMContentLoaded/Load and skewing LCP attribution.
  *
- * Since there's no filter around that specific line of markup, this module
- * rewrites the final HTML output (same technique caching/optimization
- * plugins use for lazy-loading) to swap the eager `src` for `data-lazy-src`
- * and strip `autoplay`, then a small IntersectionObserver script restores
- * `src` and starts playback only once the tile is actually about to scroll
- * into view. No theme file is touched, so this survives Woodmart updates.
+ * Rewrites just this widget's rendered HTML via Elementor's own
+ * `elementor/widget/render_content` filter (per-widget, not a global page
+ * buffer — an earlier version of this module used ob_start() on the whole
+ * page and that broke Elementor's internal CSS settings manager) to swap
+ * the eager `src` for `data-lazy-src` and drop `autoplay`. A small
+ * IntersectionObserver script then restores `src` and starts playback only
+ * once the tile is about to scroll into view. No theme file is touched, so
+ * this survives Woodmart updates.
  */
 
 defined( 'ABSPATH' ) || exit;
 
-add_action( 'template_redirect', 'lior_lazy_promo_videos_buffer_start', 1 );
+add_filter( 'elementor/widget/render_content', 'lior_lazy_promo_videos_rewrite', 10, 2 );
 
-function lior_lazy_promo_videos_buffer_start() {
-	if ( is_admin() || is_feed() || wp_doing_ajax() || defined( 'REST_REQUEST' ) ) {
-		return;
-	}
-	ob_start( 'lior_lazy_promo_videos_rewrite' );
-}
-
-function lior_lazy_promo_videos_rewrite( $html ) {
-	if ( strpos( $html, 'autoplay muted loop playsinline' ) === false ) {
-		return $html;
+function lior_lazy_promo_videos_rewrite( $widget_content, $widget ) {
+	$applicable = array( 'wd_banner', 'wd_banner_carousel' );
+	if ( ! in_array( $widget->get_name(), $applicable, true ) || strpos( $widget_content, 'autoplay muted loop playsinline' ) === false ) {
+		return $widget_content;
 	}
 
 	return preg_replace(
 		'/<video src="([^"]+)" autoplay muted loop playsinline><\/video>/',
 		'<video data-lazy-src="$1" muted loop playsinline preload="none" class="lior-lazy-video"></video>',
-		$html
+		$widget_content
 	);
 }
 
