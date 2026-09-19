@@ -72,7 +72,27 @@ function lior_mobile_show_both_product_images_css() {
 
 			.product-element-bottom .wrap-price,
 			.wrap-price {
+				margin-top: 0 !important;
+			}
+
+			/* Pull product title and price closer together on mobile */
+			.product-element-bottom,
+			.product-bottom {
 				margin-top: 2px !important;
+			}
+
+			.product-element-bottom .wd-product-header,
+			.product-element-bottom .product-title,
+			.wd-product-header,
+			.product-title,
+			.product-element-bottom h2,
+			.product-element-bottom .wd-entities-title,
+			.wd-entities-title,
+			.product-element-bottom h3,
+			.product-element-bottom .entry-title {
+				margin-bottom: 0 !important;
+				padding-bottom: 0 !important;
+				line-height: 1.2 !important;
 			}
 
 			/* Main (real) product image */
