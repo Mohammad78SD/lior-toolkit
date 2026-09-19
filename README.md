@@ -86,3 +86,13 @@ Still possible if GitHub is unreachable: zip this folder (named
   printer, then marks it printed. Config + API key: WP Admin → Tools → Lior
   Auto-Print. Mac setup: hand the client `mac-agent/` and have them
   double-click `install.command` (see `mac-agent/README.md`).
+- `force-product-image-ratio.php` — display-only fix that pins every
+  product image (shop grid, single product gallery + thumbnails,
+  related/upsell blocks) to a 1120x1380 box via CSS `aspect-ratio` +
+  `object-fit: contain` on white, so older uploads are letterboxed instead of
+  cropped and stay consistent with the new 1120x1380 photography without
+  touching the actual files.
+- `mobile-show-both-product-images.php` — on mobile (≤768px) shop/category
+  grid, shows both the real product photo and the model photo stacked
+  vertically in each product card, instead of only the real photo with the
+  model photo hidden behind a hover swap that mobile has no way to trigger.
