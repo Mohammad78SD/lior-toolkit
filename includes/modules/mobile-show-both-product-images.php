@@ -185,6 +185,16 @@ function lior_mobile_show_both_product_images_css() {
 				--wd-action-h: 32px !important;
 			}
 
+			/* .wd-buttons' own background is plain white — same white as the
+			   letterboxed product photo behind it, so on a light product shot
+			   it has zero contrast and reads as glued onto the image with no
+			   edge, regardless of how much inset space it has. Give it an
+			   actual boundary. */
+			.wd-buttons {
+				border: 1px solid rgba(0, 0, 0, 0.12) !important;
+				box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18) !important;
+			}
+
 			.wd-buttons .wd-action-btn.wd-style-icon {
 				--wd-action-icon-size: 14px !important;
 			}
