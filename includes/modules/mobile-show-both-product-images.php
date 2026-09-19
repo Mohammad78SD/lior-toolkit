@@ -204,9 +204,9 @@ function lior_mobile_show_both_product_images_css() {
 			   presumably tuned for) is untouched. */
 			.product-grid-item .wd-buttons,
 			.products .product.product-grid-item .wd-buttons {
-				top: 12px !important;
-				right: 12px !important;
-				bottom: 12px !important;
+				top: 6px !important;
+				right: 6px !important;
+				bottom: 6px !important;
 				height: auto !important;
 				padding: 0 !important;
 			}
