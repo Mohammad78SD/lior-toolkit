@@ -175,6 +175,24 @@ function lior_mobile_show_both_product_images_css() {
 				letter-spacing: 0.03em !important;
 				pointer-events: none !important;
 			}
+
+			/* Shrink the quick-view/wishlist icon buttons to the same tight
+			   scale as the "On model" label (45px circle felt bulky next to
+			   it). --wd-action-w/h and --wd-btn-inset are Woodmart's own
+			   sizing hooks, no literal padding to trim on these. */
+			.wd-buttons .wd-action-btn {
+				--wd-action-w: 32px !important;
+				--wd-action-h: 32px !important;
+			}
+
+			.wd-buttons .wd-action-btn.wd-style-icon {
+				--wd-action-icon-size: 14px !important;
+			}
+
+			.wd-buttons.wd-pos-r-t,
+			.wd-buttons.wd-pos-r-b {
+				--wd-btn-inset: 6px !important;
+			}
 		}
 	</style>
 	<?php
