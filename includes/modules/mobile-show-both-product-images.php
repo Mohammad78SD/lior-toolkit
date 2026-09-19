@@ -59,6 +59,22 @@ function lior_mobile_show_both_product_images_css() {
 				margin-bottom: 14px !important;
 			}
 
+			/* Tighten the gap between the product title and the price right
+			   below it — client flagged it as too much space */
+			.product-element-bottom .wd-product-header,
+			.wd-product-header {
+				margin-bottom: 0 !important;
+			}
+
+			.wd-entities-title {
+				margin: 0 !important;
+			}
+
+			.product-element-bottom .wrap-price,
+			.wrap-price {
+				margin-top: 2px !important;
+			}
+
 			/* Main (real) product image */
 			.products .product .product-image-link > a > img,
 			.products .product .product-image-link > img,
