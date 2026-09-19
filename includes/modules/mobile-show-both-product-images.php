@@ -56,7 +56,7 @@ function lior_mobile_show_both_product_images_css() {
 			   the next card's images don't */
 			.products .product,
 			.wd-products-slider .product {
-				margin-bottom: 28px !important;
+				margin-bottom: 14px !important;
 			}
 
 			/* Main (real) product image */
@@ -122,9 +122,9 @@ function lior_mobile_show_both_product_images_css() {
 				z-index: 2;
 				background-color: rgba(255, 255, 255, 0.85) !important;
 				color: #333 !important;
-				font-size: 11px !important;
+				font-size: 9px !important;
 				line-height: 1 !important;
-				padding: 4px 8px !important;
+				padding: 3px 6px !important;
 				border-radius: 3px !important;
 				text-transform: uppercase !important;
 				letter-spacing: 0.03em !important;
