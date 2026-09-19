@@ -95,6 +95,15 @@ function lior_mobile_show_both_product_images_css() {
 				line-height: 1.2 !important;
 			}
 
+			/* The actual title-price gap comes from Woodmart's own flex
+			   `gap` on .product-element-bottom (--wd-prod-gap, 12px default)
+			   -- not margin/padding on the children, which is why the rules
+			   above alone didn't move it. Halved per client request. */
+			.product-element-bottom {
+				--wd-prod-gap: 6px;
+				gap: 6px !important;
+			}
+
 			/* Main (real) product image */
 			.products .product .product-image-link > a > img,
 			.products .product .product-image-link > img,
