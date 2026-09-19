@@ -9,6 +9,13 @@
  *
  * Both images keep the 1120x1380 aspect-ratio + object-fit: contain treatment
  * from force-product-image-ratio.php so they letterbox consistently on white.
+ *
+ * Client feedback after staging review: the two stacked images read as two
+ * different products, not two views of the same one, because the gap between
+ * them was the same order of magnitude as the grid gap to the *next* card. Two
+ * fixes: (1) a light shared background + padding around the pair binds them
+ * visually as one unit, distinct from neighboring cards, and (2) a small "On
+ * model" caption on the second image removes the ambiguity outright.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -22,14 +29,18 @@ function lior_mobile_show_both_product_images_css() {
 	?>
 	<style id="lior-mobile-both-product-images">
 		@media (max-width: 768px) {
-			/* Make product card image container a vertical stack */
+			/* Make product card image container a vertical stack, bound
+			   together visually so the pair doesn't read as two products */
 			.products .product .product-image-link,
 			.wd-products-slider .product-image-link,
 			.product-image-link,
 			.wd-product-thumb {
 				display: flex !important;
 				flex-direction: column !important;
-				gap: 8px !important;
+				gap: 4px !important;
+				background-color: #f7f7f7 !important;
+				border-radius: 6px !important;
+				padding: 6px !important;
 			}
 
 			/* Main (real) product image */
@@ -80,6 +91,27 @@ function lior_mobile_show_both_product_images_css() {
 				object-fit: contain !important;
 				object-position: center center !important;
 				background-color: #fff !important;
+			}
+
+			/* Label the second image so the pair reads as one product's
+			   two views, not two different products */
+			.wd-product-img-hover::after,
+			.product-image-link .wd-product-img-hover::after,
+			.products .product .wd-product-img-hover::after {
+				content: "On model";
+				position: absolute !important;
+				bottom: 6px;
+				left: 6px;
+				z-index: 2;
+				background-color: rgba(255, 255, 255, 0.85) !important;
+				color: #333 !important;
+				font-size: 11px !important;
+				line-height: 1 !important;
+				padding: 4px 8px !important;
+				border-radius: 3px !important;
+				text-transform: uppercase !important;
+				letter-spacing: 0.03em !important;
+				pointer-events: none !important;
 			}
 		}
 	</style>
