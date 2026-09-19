@@ -176,32 +176,58 @@ function lior_mobile_show_both_product_images_css() {
 				pointer-events: none !important;
 			}
 
-			/* Shrink the quick-view/wishlist icon buttons to the same tight
-			   scale as the "On model" label (45px circle felt bulky next to
-			   it). --wd-action-w/h and --wd-btn-inset are Woodmart's own
-			   sizing hooks, no literal padding to trim on these. */
+			/* Shrink the quick-view/wishlist icon buttons' clickable area to
+			   the same tight scale as the "On model" label. --wd-action-w/h
+			   is Woodmart's own sizing hook for the outer <a>, still honored
+			   — the icon *glyphs* themselves are sized by literal px values
+			   in the site's own Elementor Kit custom CSS (see below), not by
+			   this variable. */
 			.wd-buttons .wd-action-btn {
 				--wd-action-w: 32px !important;
 				--wd-action-h: 32px !important;
 			}
 
-			/* .wd-buttons' own background is plain white — same white as the
-			   letterboxed product photo behind it, so on a light product shot
-			   it has zero contrast and reads as glued onto the image with no
-			   edge, regardless of how much inset space it has. Give it an
-			   actual boundary. */
-			.wd-buttons {
-				border: 1px solid rgba(0, 0, 0, 0.12) !important;
-				box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18) !important;
+			/* Found the actual cause of "stuck to edge": the site's global
+			   Elementor Kit custom CSS (Elementor > Site Settings, stored on
+			   the "Default Kit", not in this plugin/git — post ID 6 on this
+			   install) has its own rule:
+			   .product-grid-item .wd-buttons { top:0; right:0; bottom:0;
+			   padding:0; background:transparent; box-shadow:none; all
+			   !important; }
+			   That's 2 classes of specificity — higher than the plain
+			   .wd-buttons we were overriding before, and it sets top/right/
+			   bottom directly, bypassing Woodmart's --wd-btn-inset variable
+			   entirely. That's why every earlier round of inset/background
+			   tweaks here had no visible effect. Matching it with equal
+			   selector text plus one extra ancestor class for safety, still
+			   !important, mobile-only so desktop (which that Kit CSS was
+			   presumably tuned for) is untouched. */
+			.product-grid-item .wd-buttons,
+			.products .product.product-grid-item .wd-buttons {
+				top: 12px !important;
+				right: 12px !important;
+				bottom: 12px !important;
+				height: auto !important;
+				padding: 0 !important;
 			}
 
-			.wd-buttons .wd-action-btn.wd-style-icon {
-				--wd-action-icon-size: 14px !important;
-			}
-
-			.wd-buttons.wd-pos-r-t,
-			.wd-buttons.wd-pos-r-b {
-				--wd-btn-inset: 22px !important;
+			/* Same Kit CSS already gives the quick-view icon its own white
+			   30x30 rounded-square background (.wd-quick-view-btn
+			   .wd-action-icon) — that's why quick-view had *some* contrast
+			   and wishlist had none: the wishlist heart has no equivalent
+			   rule. Match it instead of adding a background on the outer
+			   .wd-buttons wrapper, which spans the full image height by
+			   that same Kit CSS's design (column-reverse + space-between)
+			   and would show as one tall bar behind both icons rather than
+			   two distinct buttons. */
+			.wd-wishlist-btn .wd-action-icon {
+				background-color: #ffffff !important;
+				border-radius: 4px !important;
+				width: 30px !important;
+				height: 30px !important;
+				display: flex !important;
+				align-items: center !important;
+				justify-content: center !important;
 			}
 		}
 	</style>
