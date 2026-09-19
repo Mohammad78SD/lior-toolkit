@@ -191,7 +191,7 @@ function lior_mobile_show_both_product_images_css() {
 
 			.wd-buttons.wd-pos-r-t,
 			.wd-buttons.wd-pos-r-b {
-				--wd-btn-inset: 14px !important;
+				--wd-btn-inset: 22px !important;
 			}
 		}
 	</style>
