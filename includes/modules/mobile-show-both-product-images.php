@@ -10,12 +10,21 @@
  * Both images keep the 1120x1380 aspect-ratio + object-fit: contain treatment
  * from force-product-image-ratio.php so they letterbox consistently on white.
  *
- * Client feedback after staging review: the two stacked images read as two
- * different products, not two views of the same one, because the gap between
- * them was the same order of magnitude as the grid gap to the *next* card. Two
- * fixes: (1) a light shared background + padding around the pair binds them
- * visually as one unit, distinct from neighboring cards, and (2) a small "On
- * model" caption on the second image removes the ambiguity outright.
+ * Client feedback round 1: the two stacked images read as two different
+ * products. Tried a shared background + padding around the pair to bind them
+ * visually — broke the wishlist/quickview icon positions, which are anchored
+ * inside this same container and assume the theme's original box model, and
+ * still felt like two products because each image already renders as its own
+ * white boxed tile (aspect-ratio + white background from
+ * force-product-image-ratio.php), so two boxed tiles stacked just reads as
+ * two small cards regardless of what wraps them.
+ *
+ * Client feedback round 2: dropped the background/padding (fixes the icons).
+ * Instead: the two images sit almost flush (near-zero gap) with a hairline
+ * divider between them so they read as one continuous strip, not two boxes;
+ * the gap between *different* product cards is pushed wider so proximity
+ * itself signals which images belong together; and the "On model" label on
+ * the second image stays as the explicit fallback.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -29,18 +38,25 @@ function lior_mobile_show_both_product_images_css() {
 	?>
 	<style id="lior-mobile-both-product-images">
 		@media (max-width: 768px) {
-			/* Make product card image container a vertical stack, bound
-			   together visually so the pair doesn't read as two products */
+			/* Make product card image container a vertical stack. No
+			   background/padding here — that box also holds the theme's
+			   wishlist/quickview icons, which are positioned assuming the
+			   original box model. */
 			.products .product .product-image-link,
 			.wd-products-slider .product-image-link,
 			.product-image-link,
 			.wd-product-thumb {
 				display: flex !important;
 				flex-direction: column !important;
-				gap: 4px !important;
-				background-color: #f7f7f7 !important;
-				border-radius: 6px !important;
-				padding: 6px !important;
+				gap: 0 !important;
+			}
+
+			/* Wider gap between *different* product cards, so proximity
+			   itself signals that the two images above belong together and
+			   the next card's images don't */
+			.products .product,
+			.wd-products-slider .product {
+				margin-bottom: 28px !important;
 			}
 
 			/* Main (real) product image */
@@ -81,6 +97,7 @@ function lior_mobile_show_both_product_images_css() {
 				overflow: hidden !important;
 				transform: none !important;
 				z-index: 1 !important;
+				border-top: 1px solid #ececec !important;
 			}
 
 			.wd-product-img-hover img,
